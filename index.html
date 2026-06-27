@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obsidian Core | Дашборд</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ Obsidian Core v2.0</h1>
+    <p class="subtitle">Состояние фронтов на <span id="date"></span></p>
+    <div id="dashboard">Загрузка...</div>
+  </div>
+
+  <script>
+    fetch('data.json')
+      .then(res => res.json())
+      .then(data => {
+        const dateEl = document.getElementById('date');
+        dateEl.textContent = data.дата;
+
+        let html = '';
+
+        data.фронты.forEach(фронт => {
+          html += `<div class="card">`;
+          html += `<h2>${фронт.название}</h2>`;
+
+          фронт.параметры.forEach(п => {
+            let levelBar = '';
+            if (п.уровень !== undefined) {
+              levelBar = `
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width:${п.уровень * 10}%"></div>
+                </div>
+                <span class="level-text">${п.уровень} / 10</span>
+              `;
+            }
+
+            html += `
+              <div class="param">
+                <div class="param-header">
+                  <span class="param-name">${п.имя}</span>
+                  <span class="status-badge status-${п.статус}">${getStatusText(п.статус)}</span>
+                </div>
+                <p class="param-desc">${п.состояние}</p>
+                ${levelBar}
+              </div>
+            `;
+          });
+
+          html += `</div>`;
+        });
+
+        html += `
+          <div class="card protocols">
+            <h2>📋 Протоколы</h2>
+            <p>${data.протоколы}</p>
+          </div>
+          <div class="card goals">
+            <h2>🎯 Ближайшие цели</h2>
+            <ul>
+              ${data.цели.map(цель => `<li>${цель}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+
+        document.getElementById('dashboard').innerHTML = html;
+      })
+      .catch(() => {
+        document.getElementById('dashboard').innerHTML = 'Ошибка загрузки. Проверь data.json.';
+      });
+
+    function getStatusText(status) {
+      const map = {
+        'критично': '🔴 Критично',
+        'держится': '🟢 Держится',
+        'угасла': '🟡 Угасла',
+        'хрупкое': '🟠 Хрупкое',
+        'нейтрально': '✅ Нейтрально',
+        'сохранён': '🟢 Сохранён',
+        'нет': '🔴 Нет',
+        'пауза': '🟡 Пауза'
+      };
+      return map[status] || status;
+    }
+  </script>
+</body>
+</html>
